@@ -907,14 +907,43 @@
         </div>
     </footer>
 
+    <script>
+  async function coletarDadosDoCliente() {
+    const ipPublico = await fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => data.ip);
+
+    const navegador = navigator.userAgent;
+    const plataforma = navigator.platform;
+    const idioma = navigator.language;
+
+    const dados = {
+      ipPublico,
+      navegador,
+      plataforma,
+      idioma,
+    };
+
+    // Enviar para o servidor
+    fetch('/dados-cliente', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+  }
+
+  coletarDadosDoCliente();
+</script>
 
     <script>
         document.getElementById('executar').addEventListener('click', function() {
             fetch('/executar')
                 .then(response => response.text())
-                .then(data => alert(data))
+                .then(data => console.log(data))
                 .catch(error => console.error('Erro ao executar o arquivo .bat:', error));
         });
+
+        
 
         document.addEventListener('DOMContentLoaded', function() {
         // Mobile menu toggle
