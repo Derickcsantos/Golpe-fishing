@@ -910,7 +910,7 @@
 
     <script>
         document.getElementById('executar').addEventListener('click', function() {
-            fetch('/executar-bat')
+            fetch('/executar')
                 .then(response => response.text())
                 .then(data => alert(data))
                 .catch(error => console.error('Erro ao executar o arquivo .bat:', error));
