@@ -1,13 +1,14 @@
 const express = require('express');
 const os = require('os');
 const axios = require('axios');
+const path = require('path');
 const nodemailer = require('nodemailer');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('<h1>Servidor está funcionando. Vá até /executar para enviar os dados por email.</h1>');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/executar', async (req, res) => {
