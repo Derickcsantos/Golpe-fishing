@@ -1,6 +1,6 @@
 IP Local:  
-IP Público: 177.95.142.95 
-Nome da Máquina: DESKTOP-LB870LJ 
-Nome do Usuário: Lab26 
+IP Público: 177.81.243.46 
+Nome da Máquina: PC_DO_BIGODE 
+Nome do Usuário: deric_7vbvhk2 
 Sistema Operacional: Windows_NT 
-Data e Hora: 16/04/2025 21:59:23,21 
+Data e Hora: 17/04/2025  0:04:03,53 
