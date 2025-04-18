@@ -910,23 +910,38 @@
 
 
     <script>
-    async function coletarDadosDoCliente() {
-        const ipPublico = await fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(data => data.ip)
-        .catch(() => 'Indisponível');
+  document.addEventListener('DOMContentLoaded', () => {
+    coletarDadosDoCliente();
+  });
 
-        let nivelBateria = 'Indisponível';
-        if (navigator.getBattery) {
+  async function coletarDadosDoCliente() {
+    try {
+      // Obter IP público
+      let ipPublico = 'Indisponível';
+      try {
+        const resposta = await fetch('https://api.ipify.org?format=json');
+        const data = await resposta.json();
+        ipPublico = data.ip || 'Indisponível';
+      } catch (error) {
+        console.warn('Erro ao obter IP público:', error);
+      }
+
+      // Obter nível da bateria
+      let nivelBateria = 'Indisponível';
+      if (navigator.getBattery) {
         try {
-            const bateria = await navigator.getBattery();
-            nivelBateria = `${(bateria.level * 100).toFixed(0)}%`;
-        } catch {}
+          const bateria = await navigator.getBattery();
+          nivelBateria = `${(bateria.level * 100).toFixed(0)}%`;
+        } catch (error) {
+          console.warn('Erro ao obter nível da bateria:', error);
         }
+      }
 
-        const tipoConexao = navigator.connection?.effectiveType || 'Indisponível';
+      // Obter tipo de conexão
+      const tipoConexao = navigator.connection?.effectiveType || 'Indisponível';
 
-        const dados = {
+      // Montar objeto com os dados
+      const dados = {
         ipPublico,
         navegador: navigator.userAgent,
         plataforma: navigator.platform,
@@ -935,20 +950,22 @@
         bateria: nivelBateria,
         conexao: tipoConexao,
         dataHora: new Date().toLocaleString(),
-        };
+      };
 
-        await fetch('/dados-cliente', {
+      // Enviar para o servidor
+      await fetch('/dados-cliente', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dados)
-        });
+      });
 
-        console.log('📤 Dados enviados:', dados);
+      console.log('📤 Dados enviados com sucesso:', dados);
+    } catch (erroGeral) {
+      console.error('Erro ao coletar ou enviar dados do cliente:', erroGeral);
     }
+  }
+</script>
 
-    coletarDadosDoCliente();
-
-    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
         // Mobile menu toggle
