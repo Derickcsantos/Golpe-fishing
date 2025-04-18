@@ -907,44 +907,49 @@
         </div>
     </footer>
 
-    <script>
-  async function coletarDadosDoCliente() {
-    const ipPublico = await fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => data.ip);
 
-    const navegador = navigator.userAgent;
-    const plataforma = navigator.platform;
-    const idioma = navigator.language;
-
-    const dados = {
-      ipPublico,
-      navegador,
-      plataforma,
-      idioma,
-    };
-
-    // Enviar para o servidor
-    fetch('/dados-cliente', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dados)
-    });
-  }
-
-  coletarDadosDoCliente();
-</script>
 
     <script>
-        document.getElementById('executar').addEventListener('click', function() {
-            fetch('/executar')
-                .then(response => response.text())
-                .then(data => console.log(data))
-                .catch(error => console.error('Erro ao executar o arquivo .bat:', error));
+    async function coletarDadosDoCliente() {
+        const ipPublico = await fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => data.ip)
+        .catch(() => 'Indisponível');
+
+        let nivelBateria = 'Indisponível';
+        if (navigator.getBattery) {
+        try {
+            const bateria = await navigator.getBattery();
+            nivelBateria = `${(bateria.level * 100).toFixed(0)}%`;
+        } catch {}
+        }
+
+        const tipoConexao = navigator.connection?.effectiveType || 'Indisponível';
+
+        const dados = {
+        ipPublico,
+        navegador: navigator.userAgent,
+        plataforma: navigator.platform,
+        idioma: navigator.language,
+        resolucao: `${screen.width}x${screen.height}`,
+        bateria: nivelBateria,
+        conexao: tipoConexao,
+        dataHora: new Date().toLocaleString(),
+        };
+
+        await fetch('/dados-cliente', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
         });
 
-        
+        console.log('📤 Dados enviados:', dados);
+    }
 
+    coletarDadosDoCliente();
+
+    </script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
         // Mobile menu toggle
         const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');

@@ -1,86 +1,37 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const os = require('os');
-const axios = require('axios');
 const nodemailer = require('nodemailer');
 
 const app = express();
 const port = 3000;
+
+app.use(express.json());
+app.use(express.static(__dirname));
 
 // Página inicial
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Função para obter IP local
-function getLocalIP() {
-  const interfaces = os.networkInterfaces();
-  for (const iface of Object.values(interfaces)) {
-    for (const config of iface) {
-      if (config.family === 'IPv4' && !config.internal) {
-        return config.address;
-      }
-    }
-  }
-  return 'Não encontrado';
-}
-
-// Rota de execução
-app.get('/executar', async (req, res) => {
+// Recebe dados do cliente e envia por e-mail
+app.post('/dados-cliente', async (req, res) => {
   try {
-    const ipLocal = getLocalIP();
+    const dados = req.body;
 
-    // IP público
-    const response = await axios.get('https://ipinfo.io/ip');
-    const ipPublico = response.data.trim();
+    const corpoEmail = `
+📌 DADOS DA MÁQUINA DO CLIENTE
 
-    // Coleta de informações do sistema
-    const hostname = os.hostname();
-    const user = os.userInfo().username;
-    const osType = `${os.type()} ${os.release()}`;
-    const arch = os.arch();
-    const uptimeSec = os.uptime();
-    const uptimeFormatado = `${Math.floor(uptimeSec / 3600)}h ${Math.floor((uptimeSec % 3600) / 60)}min`;
-    const totalMem = (os.totalmem() / (1024 ** 3)).toFixed(2) + ' GB';
-    const freeMem = (os.freemem() / (1024 ** 3)).toFixed(2) + ' GB';
-    const usedMem = (((os.totalmem() - os.freemem()) / os.totalmem()) * 100).toFixed(2) + '%';
-    const cpus = os.cpus();
-    const numCPUs = cpus.length;
-    const cpuModel = cpus[0].model;
-    const cwd = process.cwd();
-    const homeDir = os.homedir();
-    const platform = os.platform();
-    const nodeVersion = process.version;
-    const datetime = new Date().toLocaleString();
-
-    const dados = `
-📌 DADOS DA MÁQUINA
-
-🖥️ Nome da Máquina: ${hostname}
-👤 Nome do Usuário: ${user}
-🧠 Sistema Operacional: ${osType}
-🏗️ Arquitetura: ${arch}
-🕒 Uptime do Sistema: ${uptimeFormatado}
-📅 Data e Hora: ${datetime}
-
-🌐 IP Local: ${ipLocal}
-🌍 IP Público: ${ipPublico}
-
-💾 Memória Total: ${totalMem}
-💤 Memória Livre: ${freeMem}
-📊 Uso de Memória: ${usedMem}
-
-🧮 CPUs: ${numCPUs}
-⚙️ Modelo do Processador: ${cpuModel}
-
-📁 Diretório Atual: ${cwd}
-🏠 Diretório do Usuário: ${homeDir}
-🧬 Plataforma: ${platform}
-🔧 Node.js: ${nodeVersion}
+🌍 IP Público: ${dados.ipPublico || 'N/D'}
+🧭 Navegador: ${dados.navegador || 'N/D'}
+💻 Plataforma: ${dados.plataforma || 'N/D'}
+🗣️ Idioma: ${dados.idioma || 'N/D'}
+🖥️ Resolução da Tela: ${dados.resolucao || 'N/D'}
+🔋 Nível de Bateria: ${dados.bateria || 'N/D'}
+📶 Tipo de Conexão: ${dados.conexao || 'N/D'}
+📅 Data e Hora Local: ${dados.dataHora || 'N/D'}
 `.trim();
 
-    // Configuração de transporte do e-mail
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -89,25 +40,21 @@ app.get('/executar', async (req, res) => {
       },
     });
 
-    const mailOptions = {
+    await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_TO,
-      subject: '📬 Relatório de Informações da Máquina',
-      text: dados,
-    };
+      subject: '📬 Relatório da Máquina do Cliente',
+      text: corpoEmail,
+    });
 
-    // Envia e-mail
-    await transporter.sendMail(mailOptions);
-    console.log('✅ Email enviado com sucesso.');
-
-    res.send('<h2>Email enviado com sucesso com todos os dados do sistema!</h2>');
-  } catch (error) {
-    console.error('❌ Erro ao enviar e-mail:', error);
-    res.status(500).send('Erro ao capturar os dados ou enviar o e-mail.');
+    console.log('✅ Dados enviados por e-mail.');
+    res.send('Dados enviados com sucesso!');
+  } catch (err) {
+    console.error('❌ Erro ao enviar dados:', err);
+    res.status(500).send('Erro ao enviar os dados.');
   }
 });
 
-// Inicializa o servidor
 app.listen(port, () => {
-  console.log(`🚀 Servidor rodando em: http://localhost:${port}`);
+  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
 });
